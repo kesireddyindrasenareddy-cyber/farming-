@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserProfile, Quest, LeaderboardEntry, Badge, Course, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, DailyBriefing, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter } from '../types';
-import { generateQuests, checkPesticide, analyzeSoil, suggestCrops, getWaterRequirement, getDailyBriefing, getCropProductionTime, getEstimatedYield, findLocalDealers, findLocalPesticideShops, getGrassListings, detectCropDisease, findColdStorageCenters } from '../services/geminiService';
+import { UserProfile, Quest, LeaderboardEntry, Badge, Course, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, DailyBriefing, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter, CropSellingCenter } from '../types';
+import { generateQuests, checkPesticide, analyzeSoil, suggestCrops, getWaterRequirement, getDailyBriefing, getCropProductionTime, getEstimatedYield, findLocalDealers, findLocalPesticideShops, getGrassListings, detectCropDisease, findColdStorageCenters, findCropSellingCenters } from '../services/geminiService';
 import Header from './Header';
 import QuestCard from './QuestCard';
 import Leaderboard from './Leaderboard';
@@ -10,25 +10,32 @@ import Courses from './Courses';
 import FarmTools from './FarmTools';
 import FarmCompanion from './FarmCompanion';
 import { mockBadges, mockLeaderboard, mockCourses } from '../constants';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface DashboardProps {
   userProfile: UserProfile;
 }
 
-const LoadingSpinner: React.FC = () => (
-    <div className="flex flex-col items-center justify-center space-y-2">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green"></div>
-        <p className="text-brand-green font-medium">Generating Your Personalized Quests...</p>
-    </div>
-);
+const LoadingSpinner: React.FC = () => {
+    const { t } = useTranslation();
+    return (
+        <div className="flex flex-col items-center justify-center space-y-2">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green"></div>
+            <p className="text-brand-green font-medium">{t('loadingQuests')}</p>
+        </div>
+    );
+};
 
-const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => (
-    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
-        <p className="font-bold">An Error Occurred</p>
-        <p>{message}</p>
-        <p className="mt-2 text-sm">Please ensure your Gemini API key is correctly configured in your environment variables and try again.</p>
-    </div>
-);
+const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => {
+    const { t } = useTranslation();
+    return (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+            <p className="font-bold">{t('errorOccurred')}</p>
+            <p>{message}</p>
+            <p className="mt-2 text-sm">{t('errorCheckAPIKey')}</p>
+        </div>
+    );
+};
 
 const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) => {
   const [userProfile, setUserProfile] = useState<UserProfile>(initialProfile);
@@ -40,6 +47,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
   const [error, setError] = useState<string | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(mockLeaderboard);
   const [badges] = useState<Badge[]>(mockBadges);
+  const { t, language } = useTranslation();
 
   // State for Farm Companion
   const [dailyBriefing, setDailyBriefing] = useState<DailyBriefing | null>(null);
@@ -80,33 +88,36 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
   const [coldStorageCenters, setColdStorageCenters] = useState<ColdStorageCenter[] | null>(null);
   const [coldStorageLoading, setColdStorageLoading] = useState(false);
   const [coldStorageError, setColdStorageError] = useState<string | null>(null);
+  const [cropSellingCenters, setCropSellingCenters] = useState<CropSellingCenter[] | null>(null);
+  const [cropSellingCentersLoading, setCropSellingCentersLoading] = useState(false);
+  const [cropSellingCentersError, setCropSellingCentersError] = useState<string | null>(null);
 
 
   const fetchQuests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const fetchedQuests = await generateQuests(userProfile);
+      const fetchedQuests = await generateQuests(userProfile, language);
       setQuests(fetchedQuests);
     } catch (err: any) {
       setError(err.message || "An unknown error occurred.");
     } finally {
       setLoading(false);
     }
-  }, [userProfile]);
+  }, [userProfile, language]);
 
   const fetchBriefing = useCallback(async () => {
     setBriefingLoading(true);
     setBriefingError(null);
     try {
-      const briefing = await getDailyBriefing(userProfile, completedQuests.length);
+      const briefing = await getDailyBriefing(userProfile, completedQuests.length, language);
       setDailyBriefing(briefing);
     } catch (err: any) {
       setBriefingError(err.message);
     } finally {
       setBriefingLoading(false);
     }
-  }, [userProfile, completedQuests.length]);
+  }, [userProfile, completedQuests.length, language]);
 
   useEffect(() => {
     fetchQuests();
@@ -143,7 +154,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setPesticideError(null);
     setPesticideResult(null);
     try {
-        const result = await checkPesticide(pesticideName);
+        const result = await checkPesticide(pesticideName, language);
         setPesticideResult(result);
         addPoints(10); // Award points for checking
     } catch (err: any) {
@@ -158,7 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setSoilError(null);
     setSoilResult(null);
     try {
-        const result = await analyzeSoil(soilData, userProfile);
+        const result = await analyzeSoil(soilData, userProfile, language);
         setSoilResult(result);
         addPoints(25); // Award points for analyzing
     } catch (err: any) {
@@ -173,7 +184,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setCropSuggesterError(null);
     setCropSuggestions(null);
     try {
-        const result = await suggestCrops(soilData);
+        const result = await suggestCrops(soilData, language);
         setCropSuggestions(result);
         addPoints(20); // Award points for using the suggester
     } catch (err: any) {
@@ -188,7 +199,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setWaterRequirementError(null);
     setWaterRequirement(null);
     try {
-        const result = await getWaterRequirement(cropName);
+        const result = await getWaterRequirement(cropName, language);
         setWaterRequirement(result);
         addPoints(15); // Award points for checking water usage
     } catch (err: any) {
@@ -203,7 +214,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setCropProductionError(null);
     setCropProductionInfo(null);
     try {
-        const result = await getCropProductionTime(cropName);
+        const result = await getCropProductionTime(cropName, language);
         setCropProductionInfo(result);
         addPoints(15); // Award points for checking
     } catch (err: any) {
@@ -218,7 +229,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setEstimatedYieldError(null);
     setEstimatedYield(null);
     try {
-        const result = await getEstimatedYield(cropName, farmSize);
+        const result = await getEstimatedYield(cropName, farmSize, language);
         setEstimatedYield(result);
         addPoints(15); // Award points for checking
     } catch (err: any) {
@@ -233,7 +244,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setEquipmentDealersError(null);
     setEquipmentDealers(null);
     try {
-        const result = await findLocalDealers(location, equipmentType);
+        const result = await findLocalDealers(location, equipmentType, language);
         setEquipmentDealers(result);
         addPoints(10); // Award points for finding dealers
     } catch (err: any) {
@@ -248,7 +259,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setPesticideShopsError(null);
     setPesticideShops(null);
     try {
-        const result = await findLocalPesticideShops(location);
+        const result = await findLocalPesticideShops(location, language);
         setPesticideShops(result);
         addPoints(10); // Award points for finding shops
     } catch (err: any) {
@@ -263,7 +274,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setGrassListingsError(null);
     setGrassListings(null);
     try {
-        const result = await getGrassListings(location);
+        const result = await getGrassListings(location, language);
         setGrassListings(result);
         addPoints(5); // Award points for checking marketplace
     } catch (err: any) {
@@ -278,7 +289,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setCropDiseaseError(null);
     setCropDiseaseResult(null);
     try {
-        const result = await detectCropDisease(imageDataBase64, mimeType, cropType);
+        const result = await detectCropDisease(imageDataBase64, mimeType, cropType, language);
         setCropDiseaseResult(result);
         addPoints(30); // Award points for using this advanced tool
     } catch (err: any) {
@@ -293,13 +304,28 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     setColdStorageError(null);
     setColdStorageCenters(null);
     try {
-        const result = await findColdStorageCenters(location);
+        const result = await findColdStorageCenters(location, language);
         setColdStorageCenters(result);
         addPoints(10);
     } catch (err: any) {
         setColdStorageError(err.message);
     } finally {
         setColdStorageLoading(false);
+    }
+  };
+  
+  const handleFindCropSellingCenters = async (location: string, crop: string) => {
+    setCropSellingCentersLoading(true);
+    setCropSellingCentersError(null);
+    setCropSellingCenters(null);
+    try {
+        const result = await findCropSellingCenters(location, crop, language);
+        setCropSellingCenters(result);
+        addPoints(10);
+    } catch (err: any) {
+        setCropSellingCentersError(err.message);
+    } finally {
+        setCropSellingCentersLoading(false);
     }
   };
 
@@ -366,10 +392,14 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
                 coldStorageCenters={coldStorageCenters}
                 coldStorageLoading={coldStorageLoading}
                 coldStorageError={coldStorageError}
+                onFindCropSellingCenters={handleFindCropSellingCenters}
+                cropSellingCenters={cropSellingCenters}
+                cropSellingCentersLoading={cropSellingCentersLoading}
+                cropSellingCentersError={cropSellingCentersError}
             />
 
             <div>
-              <h2 className="text-2xl font-bold mb-4 text-brand-dark">Your Active Quests</h2>
+              <h2 className="text-2xl font-bold mb-4 text-brand-dark">{t('activeQuestsTitle')}</h2>
               {loading && <LoadingSpinner />}
               {error && <ErrorDisplay message={error} />}
               {!loading && !error && activeQuests.length > 0 && (
@@ -381,9 +411,9 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
               )}
                {!loading && !error && activeQuests.length === 0 && (
                 <div className="text-center py-12 bg-white rounded-lg shadow">
-                    <p className="text-gray-500">You've completed all available quests!</p>
+                    <p className="text-gray-500">{t('allQuestsCompleted')}</p>
                     <button onClick={fetchQuests} className="mt-4 px-4 py-2 bg-brand-green text-white rounded-md hover:bg-green-600 transition-colors">
-                        Generate New Quests
+                        {t('generateNewQuests')}
                     </button>
                 </div>
                )}

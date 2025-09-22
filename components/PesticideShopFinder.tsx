@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PesticideShop } from '../types';
 import { PesticideShopIcon } from '../constants';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface PesticideShopFinderProps {
     onFind: (location: string) => void;
@@ -11,6 +12,7 @@ interface PesticideShopFinderProps {
 }
 
 const PesticideShopFinder: React.FC<PesticideShopFinderProps> = ({ onFind, shops, loading, error, userLocation }) => {
+    const { t } = useTranslation();
     const [location, setLocation] = useState(userLocation);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -22,20 +24,20 @@ const PesticideShopFinder: React.FC<PesticideShopFinderProps> = ({ onFind, shops
 
     return (
         <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50 h-full flex flex-col">
-            <h3 className="text-lg font-bold text-brand-dark flex items-center"><PesticideShopIcon /> <span className="ml-2">Pesticide Shop Finder</span></h3>
-            <p className="text-sm text-gray-500 mt-1 mb-4">Find local agricultural supply shops. (+10 PTS)</p>
+            <h3 className="text-lg font-bold text-brand-dark flex items-center"><PesticideShopIcon /> <span className="ml-2">{t('pesticideShopFinderTitle')}</span></h3>
+            <p className="text-sm text-gray-500 mt-1 mb-4">{t('pesticideShopFinderDescription')}</p>
             <form onSubmit={handleSubmit} className="flex space-x-2">
                 <input
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Enter your location"
+                    placeholder={t('enterLocationPlaceholder')}
                     className="flex-grow block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green sm:text-sm"
                     disabled={loading}
                     required
                 />
                 <button type="submit" className="px-4 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-gray-400" disabled={loading || !location}>
-                    {loading ? 'Searching...' : 'Find Shops'}
+                    {loading ? t('searchingButton') : t('findShopsButton')}
                 </button>
             </form>
 
@@ -43,7 +45,7 @@ const PesticideShopFinder: React.FC<PesticideShopFinderProps> = ({ onFind, shops
                 {error && <p className="text-sm text-red-600">{error}</p>}
                 {shops && (
                     <div className="space-y-3">
-                        <h4 className="font-bold text-md text-gray-800">Found {shops.length} shops:</h4>
+                        <h4 className="font-bold text-md text-gray-800">{t('foundShops', { count: shops.length })}:</h4>
                         {shops.map((shop, index) => (
                             <div key={index} className="p-3 rounded-lg bg-red-50 border-l-4 border-red-500">
                                 <p className="font-bold text-md text-red-800">{shop.name}</p>
@@ -55,7 +57,7 @@ const PesticideShopFinder: React.FC<PesticideShopFinderProps> = ({ onFind, shops
                                     rel="noopener noreferrer"
                                     className="text-sm text-blue-600 hover:underline mt-2 inline-block"
                                 >
-                                    View on Map &rarr;
+                                    {t('viewOnMapLink')} &rarr;
                                 </a>
                             </div>
                         ))}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PesticideCheckResult, PesticideClassification } from '../types';
 import { SearchIcon } from '../constants';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface PesticideCheckerProps {
     onCheck: (pesticideName: string) => void;
@@ -17,6 +18,7 @@ const classificationStyles: Record<PesticideClassification, { bg: string, text: 
 
 const PesticideChecker: React.FC<PesticideCheckerProps> = ({ onCheck, result, loading, error }) => {
     const [pesticideName, setPesticideName] = useState('');
+    const { t } = useTranslation();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,19 +29,19 @@ const PesticideChecker: React.FC<PesticideCheckerProps> = ({ onCheck, result, lo
 
     return (
         <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-            <h3 className="text-lg font-bold text-brand-dark flex items-center"><SearchIcon /> <span className="ml-2">Pesticide Checker</span></h3>
-            <p className="text-sm text-gray-500 mt-1 mb-4">Check if a pesticide is sustainable. (+10 PTS)</p>
+            <h3 className="text-lg font-bold text-brand-dark flex items-center"><SearchIcon /> <span className="ml-2">{t('pesticideCheckerTitle')}</span></h3>
+            <p className="text-sm text-gray-500 mt-1 mb-4">{t('pesticideCheckerDescription')}</p>
             <form onSubmit={handleSubmit} className="flex space-x-2">
                 <input
                     type="text"
                     value={pesticideName}
                     onChange={(e) => setPesticideName(e.target.value)}
-                    placeholder="e.g., Chlorpyrifos"
+                    placeholder={t('pesticideCheckerPlaceholder')}
                     className="flex-grow block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green sm:text-sm"
                     disabled={loading}
                 />
                 <button type="submit" className="px-4 py-2 bg-brand-green text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400" disabled={loading || !pesticideName}>
-                    {loading ? 'Checking...' : 'Check'}
+                    {loading ? t('checkingButton') : t('checkButton')}
                 </button>
             </form>
             
@@ -51,7 +53,7 @@ const PesticideChecker: React.FC<PesticideCheckerProps> = ({ onCheck, result, lo
                         <p className="text-sm text-gray-700 mt-1">{result.explanation}</p>
                         {result.alternatives && result.alternatives.length > 0 && (
                             <div className="mt-2">
-                                <p className="text-sm font-semibold text-gray-800">Alternatives:</p>
+                                <p className="text-sm font-semibold text-gray-800">{t('alternativesLabel')}:</p>
                                 <ul className="list-disc list-inside text-sm text-gray-600">
                                     {result.alternatives.map((alt, i) => <li key={i}>{alt}</li>)}
                                 </ul>

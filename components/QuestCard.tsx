@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { Quest, QuestCategory } from '../types';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface QuestCardProps {
   quest: Quest;
@@ -15,6 +15,7 @@ const categoryColors: Record<QuestCategory, string> = {
 };
 
 const QuestCard: React.FC<QuestCardProps> = ({ quest, onComplete }) => {
+  const { t } = useTranslation();
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-brand-green transition-all hover:shadow-lg hover:scale-[1.01]">
       <div className="flex justify-between items-start">
@@ -23,7 +24,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, onComplete }) => {
           <p className="text-gray-600 mt-1">{quest.description}</p>
         </div>
         <div className="text-right ml-4 flex-shrink-0">
-          <p className="text-2xl font-bold text-brand-green">+{quest.points} PTS</p>
+          <p className="text-2xl font-bold text-brand-green">+{quest.points} {t('pointsLabel')}</p>
           <p className="text-sm text-gray-500">{quest.duration}</p>
         </div>
       </div>
@@ -35,7 +36,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, onComplete }) => {
           onClick={() => onComplete(quest.id, quest.points)}
           className="px-6 py-2 bg-brand-green text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-transform transform hover:scale-105"
         >
-          Complete
+          {t('completeButton')}
         </button>
       </div>
     </div>
@@ -43,4 +44,3 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, onComplete }) => {
 };
 
 export default QuestCard;
-   

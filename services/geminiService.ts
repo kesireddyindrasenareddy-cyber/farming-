@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { Quest, UserProfile, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, DailyBriefing, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter } from "../types";
+import { Quest, UserProfile, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, DailyBriefing, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter, CropSellingCenter } from "../types";
 
 const API_KEY = process.env.API_KEY;
 
@@ -250,21 +250,39 @@ const coldStorageSchema = {
     },
 };
 
+const cropSellingCenterSchema = {
+    type: Type.ARRAY,
+    items: {
+        type: Type.OBJECT,
+        properties: {
+            name: { type: Type.STRING, description: "The name of the market or Mandi." },
+            address: { type: Type.STRING, description: "The full physical address." },
+            phone: { type: Type.STRING, description: "A contact phone number." },
+            majorCrops: { type: Type.STRING, description: "A brief list of major crops traded here." },
+        },
+        required: ["name", "address", "phone", "majorCrops"],
+    },
+};
 
-export const generateQuests = async (profile: UserProfile): Promise<Quest[]> => {
+
+export const generateQuests = async (profile: UserProfile, language: string): Promise<Quest[]> => {
   if (!API_KEY) {
     throw new Error("Gemini API key is not configured.");
   }
 
   const prompt = `
     You are an expert in sustainable agriculture and gamification. Your task is to act as a game designer and create personalized, engaging quests for a farmer.
+    
+    IMPORTANT: Respond in the following language: ${language}.
 
     The farmer's profile is:
     - Crop: ${profile.crop}
     - Location: ${profile.location}
     - Farm Size: ${profile.farmSize} acres
+    - Experience: ${profile.farmingExperience}
+    - Main Goal: ${profile.primaryGoal}
 
-    Generate a JSON array of 5 unique quests tailored to this profile. Each quest must be a practical, sustainable farming practice. The quests should be actionable, have a clear goal, and sound encouraging. Do not repeat quests.
+    Generate a JSON array of 5 unique quests tailored to this profile. The quests must be practical, sustainable farming practices. They should be actionable, have a clear goal, and sound encouraging. Tailor the difficulty to the farmer's experience level and align the quests with their primary goal. Do not repeat quests.
   `;
 
   try {
@@ -286,7 +304,7 @@ export const generateQuests = async (profile: UserProfile): Promise<Quest[]> => 
 };
 
 
-export const checkPesticide = async (pesticideName: string): Promise<PesticideCheckResult> => {
+export const checkPesticide = async (pesticideName: string, language: string): Promise<PesticideCheckResult> => {
     if (!API_KEY) {
       throw new Error("Gemini API key is not configured.");
     }
@@ -294,6 +312,8 @@ export const checkPesticide = async (pesticideName: string): Promise<PesticideCh
     const prompt = `
       You are an agricultural expert specializing in sustainable farming. A farmer wants to know if the pesticide "${pesticideName}" is sustainable and safe for the environment. 
       
+      IMPORTANT: Respond in the following language: ${language}.
+
       Please provide the following in JSON format:
       1. A 'classification' which can be one of: 'Eco-Friendly', 'Use with Caution', or 'Harmful'.
       2. A brief 'explanation' (1-2 sentences) of its impact.
@@ -318,22 +338,24 @@ export const checkPesticide = async (pesticideName: string): Promise<PesticideCh
     }
   };
   
-  export const analyzeSoil = async (soilData: SoilData, profile: UserProfile): Promise<SoilAnalysisResult> => {
+  export const analyzeSoil = async (soilData: SoilData, profile: UserProfile, language: string): Promise<SoilAnalysisResult> => {
     if (!API_KEY) {
       throw new Error("Gemini API key is not configured.");
     }
   
     const prompt = `
-      You are a soil scientist. A farmer growing "${profile.crop}" in "${profile.location}" has provided their soil data:
+      You are a soil scientist. A farmer growing "${profile.crop}" in "${profile.location}" wants to achieve the goal of "${profile.primaryGoal}". They have provided their soil data:
       - pH: ${soilData.ph}
       - Nitrogen: ${soilData.nitrogen}
       - Phosphorus: ${soilData.phosphorus}
       - Potassium: ${soilData.potassium}
       - Soil Type: ${soilData.type}
   
+      IMPORTANT: Respond in the following language: ${language}.
+
       Please provide the following in JSON format:
       1. A concise 'summary' of their soil's health.
-      2. A list of 2-3 actionable 'recommendations' to improve the soil specifically for growing "${profile.crop}".
+      2. A list of 2-3 actionable 'recommendations' to improve the soil specifically for growing "${profile.crop}", keeping their goal of "${profile.primaryGoal}" in mind.
     `;
   
     try {
@@ -354,7 +376,7 @@ export const checkPesticide = async (pesticideName: string): Promise<PesticideCh
     }
   };
 
-  export const suggestCrops = async (soilData: SoilData): Promise<CropSuggestion[]> => {
+  export const suggestCrops = async (soilData: SoilData, language: string): Promise<CropSuggestion[]> => {
     if (!API_KEY) {
       throw new Error("Gemini API key is not configured.");
     }
@@ -367,12 +389,13 @@ export const checkPesticide = async (pesticideName: string): Promise<PesticideCh
       - Potassium: ${soilData.potassium}
       - Soil Type: ${soilData.type}
   
+      IMPORTANT: Respond in the following language: ${language}.
+
       Please suggest 3 suitable crops. For each crop, provide the following in JSON format within an array:
       1. 'name': The common name of the crop.
       2. 'reason': A brief, one-sentence explanation of why it's suitable for this soil.
       3. 'benefits': A list of 2-3 key benefits of growing this crop (e.g., nitrogen-fixing, drought-resistant, high-yield).
     `;
-// Fix: Add implementation for the suggestCrops function
     try {
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -391,14 +414,15 @@ export const checkPesticide = async (pesticideName: string): Promise<PesticideCh
     }
   };
   
-// Fix: Add implementation for getWaterRequirement
-export const getWaterRequirement = async (cropName: string): Promise<WaterRequirement> => {
+export const getWaterRequirement = async (cropName: string, language: string): Promise<WaterRequirement> => {
     if (!API_KEY) {
         throw new Error("Gemini API key is not configured.");
     }
     const prompt = `
         You are an agricultural hydrologist. A farmer needs to know the water requirements for growing "${cropName}".
         
+        IMPORTANT: Respond in the following language: ${language}.
+
         Please provide the following in JSON format:
         1. 'amount': A general guideline for the amount of water needed.
         2. 'frequency': A guideline for how often to water.
@@ -415,25 +439,27 @@ export const getWaterRequirement = async (cropName: string): Promise<WaterRequir
         });
         const jsonText = response.text.trim();
         return JSON.parse(jsonText) as WaterRequirement;
-    } catch (error) {
+    } catch (error)
+    {
         console.error("Error getting water requirement from Gemini API:", error);
         throw new Error(`Failed to get water requirements for "${cropName}". Please try again.`);
     }
 };
 
-// Fix: Add implementation for getDailyBriefing
-export const getDailyBriefing = async (profile: UserProfile, completedQuestsCount: number): Promise<DailyBriefing> => {
+export const getDailyBriefing = async (profile: UserProfile, completedQuestsCount: number, language: string): Promise<DailyBriefing> => {
     if (!API_KEY) {
         throw new Error("Gemini API key is not configured.");
     }
     const prompt = `
         You are a friendly and encouraging farm companion AI. Create a daily briefing for a farmer named ${profile.name}.
-        The farmer is growing ${profile.crop} and has completed ${completedQuestsCount} quests so far.
+        The farmer is growing ${profile.crop}. Their experience level is ${profile.farmingExperience} and their main goal is to ${profile.primaryGoal}. They have completed ${completedQuestsCount} quests so far.
+
+        IMPORTANT: Respond in the following language: ${language}.
 
         Please provide the following in JSON format:
-        1. 'greeting': A short, warm greeting that addresses the user by their name.
-        2. 'tip': A single, actionable, and sustainable farming tip relevant to ${profile.crop}.
-        3. 'motivation': An uplifting and short motivational quote about farming, nature, or growth.
+        1. 'greeting': A short, warm greeting that addresses the user by their name, ${profile.name}.
+        2. 'tip': A single, actionable, and sustainable farming tip relevant to ${profile.crop} and their goal of '${profile.primaryGoal}'.
+        3. 'motivation': An uplifting and short motivational quote about farming, nature, or growth, that might resonate with someone focused on ${profile.primaryGoal}.
     `;
     try {
         const response = await ai.models.generateContent({
@@ -452,14 +478,15 @@ export const getDailyBriefing = async (profile: UserProfile, completedQuestsCoun
     }
 };
 
-// Fix: Add implementation for getCropProductionTime
-export const getCropProductionTime = async (cropName: string): Promise<CropProductionInfo> => {
+export const getCropProductionTime = async (cropName: string, language: string): Promise<CropProductionInfo> => {
     if (!API_KEY) {
         throw new Error("Gemini API key is not configured.");
     }
     const prompt = `
         You are an agronomist. A farmer wants to know the production timeline for "${cropName}".
         Provide typical durations for each major growth stage.
+
+        IMPORTANT: Respond in the following language: ${language}.
 
         Please provide the following in JSON format:
         1. 'cropName': The common name of the crop.
@@ -485,13 +512,14 @@ export const getCropProductionTime = async (cropName: string): Promise<CropProdu
     }
 };
 
-// Fix: Add implementation for getEstimatedYield
-export const getEstimatedYield = async (cropName: string, farmSize: number): Promise<EstimatedYield> => {
+export const getEstimatedYield = async (cropName: string, farmSize: number, language: string): Promise<EstimatedYield> => {
     if (!API_KEY) {
         throw new Error("Gemini API key is not configured.");
     }
     const prompt = `
         You are an agricultural economist. A farmer with a ${farmSize} acre farm wants to estimate the potential yield for growing "${cropName}".
+
+        IMPORTANT: Respond in the following language: ${language}.
 
         Please provide the following in JSON format:
         1. 'cropName': The common name of the crop.
@@ -516,13 +544,14 @@ export const getEstimatedYield = async (cropName: string, farmSize: number): Pro
     }
 };
 
-// Fix: Add implementation for findLocalDealers
-export const findLocalDealers = async (location: string, equipmentType: string): Promise<EquipmentDealer[]> => {
+export const findLocalDealers = async (location: string, equipmentType: string, language: string): Promise<EquipmentDealer[]> => {
     if (!API_KEY) {
         throw new Error("Gemini API key is not configured.");
     }
     const prompt = `
         You are a local business directory assistant. A farmer is looking for dealers of "${equipmentType}" near "${location}".
+
+        IMPORTANT: Respond in the following language: ${language}.
 
         Please provide a JSON array of 3 fictional but realistic-looking local equipment dealers. For each dealer, include:
         1. 'name': The name of the dealership.
@@ -547,13 +576,14 @@ export const findLocalDealers = async (location: string, equipmentType: string):
     }
 };
 
-// Fix: Add implementation for findLocalPesticideShops
-export const findLocalPesticideShops = async (location: string): Promise<PesticideShop[]> => {
+export const findLocalPesticideShops = async (location: string, language: string): Promise<PesticideShop[]> => {
     if (!API_KEY) {
         throw new Error("Gemini API key is not configured.");
     }
     const prompt = `
         You are a local business directory assistant. A farmer is looking for pesticide or agricultural supply shops near "${location}".
+
+        IMPORTANT: Respond in the following language: ${language}.
 
         Please provide a JSON array of 3 fictional but realistic-looking local shops. For each shop, include:
         1. 'name': The name of the shop.
@@ -577,13 +607,14 @@ export const findLocalPesticideShops = async (location: string): Promise<Pestici
     }
 };
 
-// Fix: Add implementation for getGrassListings
-export const getGrassListings = async (location: string): Promise<GrassListing[]> => {
+export const getGrassListings = async (location: string, language: string): Promise<GrassListing[]> => {
     if (!API_KEY) {
         throw new Error("Gemini API key is not configured.");
     }
     const prompt = `
         You are a marketplace assistant for agricultural goods. A user is looking for grass/fodder listings (for sale or wanted) near "${location}".
+
+        IMPORTANT: Respond in the following language: ${language}.
 
         Please generate a JSON array of 4 fictional but realistic-looking marketplace listings. For each listing, include all properties from the schema. Make some 'For Sale' and some 'Wanted'.
     `;
@@ -604,8 +635,7 @@ export const getGrassListings = async (location: string): Promise<GrassListing[]
     }
 };
 
-// Fix: Add implementation for detectCropDisease
-export const detectCropDisease = async (imageDataBase64: string, mimeType: string, cropType: string): Promise<CropDiseaseResult> => {
+export const detectCropDisease = async (imageDataBase64: string, mimeType: string, cropType: string, language: string): Promise<CropDiseaseResult> => {
     if (!API_KEY) {
         throw new Error("Gemini API key is not configured.");
     }
@@ -613,6 +643,8 @@ export const detectCropDisease = async (imageDataBase64: string, mimeType: strin
         You are a plant pathologist. Analyze the provided image of a "${cropType}" leaf/plant.
         Identify the most likely disease, if any. Provide your confidence level, a description of the disease, and practical, sustainable treatment suggestions.
         If the plant looks healthy, state that.
+        
+        IMPORTANT: Respond in the following language: ${language}.
     `;
     const imagePart = {
         inlineData: {
@@ -641,13 +673,14 @@ export const detectCropDisease = async (imageDataBase64: string, mimeType: strin
     }
 };
 
-// Fix: Add implementation for findColdStorageCenters
-export const findColdStorageCenters = async (location: string): Promise<ColdStorageCenter[]> => {
+export const findColdStorageCenters = async (location: string, language: string): Promise<ColdStorageCenter[]> => {
     if (!API_KEY) {
         throw new Error("Gemini API key is not configured.");
     }
     const prompt = `
         You are a local business directory assistant. A farmer is looking for cold storage facilities near "${location}".
+
+        IMPORTANT: Respond in the following language: ${language}.
 
         Please provide a JSON array of 3 fictional but realistic-looking cold storage centers. For each center, include:
         1. 'name', 'address', 'phone', and 'capacity'.
@@ -666,5 +699,34 @@ export const findColdStorageCenters = async (location: string): Promise<ColdStor
     } catch (error) {
         console.error("Error finding cold storage centers from Gemini API:", error);
         throw new Error(`Failed to find cold storage near "${location}". Please try again.`);
+    }
+};
+
+export const findCropSellingCenters = async (location: string, crop: string, language: string): Promise<CropSellingCenter[]> => {
+    if (!API_KEY) {
+        throw new Error("Gemini API key is not configured.");
+    }
+    const prompt = `
+        You are a local agricultural market directory assistant. A farmer is looking for crop selling centers (Mandis) for "${crop}" near "${location}".
+
+        IMPORTANT: Respond in the following language: ${language}.
+
+        Please provide a JSON array of 3 fictional but realistic-looking crop selling centers. For each center, include:
+        1. 'name', 'address', 'phone', and 'majorCrops'.
+    `;
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: cropSellingCenterSchema,
+            },
+        });
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText) as CropSellingCenter[];
+    } catch (error) {
+        console.error("Error finding crop selling centers from Gemini API:", error);
+        throw new Error(`Failed to find markets near "${location}". Please try again.`);
     }
 };

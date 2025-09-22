@@ -9,6 +9,8 @@ export interface UserProfile {
   crop: string;
   location: string;
   farmSize: number;
+  farmingExperience: 'Beginner' | 'Intermediate' | 'Expert';
+  primaryGoal: 'Increase Yield' | 'Improve Soil Health' | 'Reduce Water Usage' | 'Go Organic';
 }
 
 export enum QuestCategory {

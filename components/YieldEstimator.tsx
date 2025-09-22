@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EstimatedYield } from '../types';
 import { YieldIcon } from '../constants';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface YieldEstimatorProps {
     onEstimate: (cropName: string, farmSize: number) => void;
@@ -11,6 +12,7 @@ interface YieldEstimatorProps {
 }
 
 const YieldEstimator: React.FC<YieldEstimatorProps> = ({ onEstimate, result, loading, error, farmSize: initialFarmSize }) => {
+    const { t } = useTranslation();
     const [cropName, setCropName] = useState('');
     const [farmSize, setFarmSize] = useState<number>(initialFarmSize);
 
@@ -23,24 +25,24 @@ const YieldEstimator: React.FC<YieldEstimatorProps> = ({ onEstimate, result, loa
 
     return (
         <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50 h-full flex flex-col">
-            <h3 className="text-lg font-bold text-brand-dark flex items-center"><YieldIcon /> <span className="ml-2">Yield Estimator</span></h3>
-            <p className="text-sm text-gray-500 mt-1 mb-4">Estimate potential yield for a crop. (+15 PTS)</p>
+            <h3 className="text-lg font-bold text-brand-dark flex items-center"><YieldIcon /> <span className="ml-2">{t('yieldEstimatorTitle')}</span></h3>
+            <p className="text-sm text-gray-500 mt-1 mb-4">{t('yieldEstimatorDescription')}</p>
             <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <label className="block text-xs font-medium text-gray-700">Crop Name</label>
+                        <label className="block text-xs font-medium text-gray-700">{t('cropNameLabel')}</label>
                         <input
                             type="text"
                             value={cropName}
                             onChange={(e) => setCropName(e.target.value)}
-                            placeholder="e.g., Potato"
+                            placeholder={t('yieldEstimatorPlaceholder')}
                             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green sm:text-sm"
                             disabled={loading}
                             required
                         />
                     </div>
                      <div>
-                        <label className="block text-xs font-medium text-gray-700">Farm Size (acres)</label>
+                        <label className="block text-xs font-medium text-gray-700">{t('farmSizeAcresLabel')}</label>
                         <input
                             type="number"
                             value={farmSize}
@@ -54,7 +56,7 @@ const YieldEstimator: React.FC<YieldEstimatorProps> = ({ onEstimate, result, loa
                     </div>
                 </div>
                 <button type="submit" className="w-full px-4 py-2 bg-orange-500 text-white font-semibold rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-gray-400" disabled={loading || !cropName || farmSize <= 0}>
-                    {loading ? 'Estimating...' : 'Estimate Yield'}
+                    {loading ? t('estimatingButton') : t('estimateYieldButton')}
                 </button>
             </form>
             
@@ -63,13 +65,13 @@ const YieldEstimator: React.FC<YieldEstimatorProps> = ({ onEstimate, result, loa
                 {result && (
                     <div className="p-3 rounded-lg bg-orange-50 border-l-4 border-orange-500 space-y-3">
                         <div>
-                             <p className="text-sm font-bold text-orange-800">Estimated Yield for {result.cropName}</p>
+                             <p className="text-sm font-bold text-orange-800">{t('estimatedYieldFor')} {result.cropName}</p>
                              <p className="text-2xl font-bold text-gray-800">{result.totalEstimatedYield}</p>
                              <p className="text-md font-medium text-gray-600">({result.estimatedYieldPerAcre})</p>
                         </div>
                         {result.notes && result.notes.length > 0 && (
                             <div>
-                                <p className="text-xs font-semibold text-orange-800 uppercase">Important Notes</p>
+                                <p className="text-xs font-semibold text-orange-800 uppercase">{t('importantNotesLabel')}</p>
                                 <ul className="list-disc list-inside text-sm text-gray-700 mt-1 space-y-1">
                                     {result.notes.map((note, i) => <li key={i}>{note}</li>)}
                                 </ul>

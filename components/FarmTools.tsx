@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserProfile, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter } from '../types';
+import { UserProfile, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter, CropSellingCenter } from '../types';
 import PesticideChecker from './PesticideChecker';
 import SoilAnalyzer from './SoilAnalyzer';
 import CropSuggester from './CropSuggester';
@@ -11,6 +11,8 @@ import PesticideShopFinder from './PesticideShopFinder';
 import GrassMarketplace from './GrassMarketplace';
 import CropDiseaseDetector from './CropDiseaseDetector';
 import ColdStorageFinder from './ColdStorageFinder';
+import CropSellingCenterFinder from './CropSellingCenterFinder';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface FarmToolsProps {
     userProfile: UserProfile;
@@ -58,12 +60,17 @@ interface FarmToolsProps {
     coldStorageCenters: ColdStorageCenter[] | null;
     coldStorageLoading: boolean;
     coldStorageError: string | null;
+    onFindCropSellingCenters: (location: string, crop: string) => void;
+    cropSellingCenters: CropSellingCenter[] | null;
+    cropSellingCentersLoading: boolean;
+    cropSellingCentersError: string | null;
 }
 
 const FarmTools: React.FC<FarmToolsProps> = (props) => {
+    const { t } = useTranslation();
     return (
         <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-4 text-brand-dark">Farm Intelligence Tools</h2>
+            <h2 className="text-2xl font-bold mb-4 text-brand-dark">{t('farmToolsTitle')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <PesticideChecker 
                     onCheck={props.onPesticideCheck}
@@ -135,6 +142,14 @@ const FarmTools: React.FC<FarmToolsProps> = (props) => {
                     loading={props.coldStorageLoading}
                     error={props.coldStorageError}
                     userLocation={props.userProfile.location}
+                />
+                <CropSellingCenterFinder
+                    onFind={props.onFindCropSellingCenters}
+                    centers={props.cropSellingCenters}
+                    loading={props.cropSellingCentersLoading}
+                    error={props.cropSellingCentersError}
+                    userLocation={props.userProfile.location}
+                    userCrop={props.userProfile.crop}
                 />
             </div>
         </div>

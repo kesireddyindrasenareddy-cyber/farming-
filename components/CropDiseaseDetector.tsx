@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { CropDiseaseResult } from '../types';
 import { DiseaseIcon } from '../constants';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface CropDiseaseDetectorProps {
     onDetect: (imageDataBase64: string, mimeType: string, cropType: string) => void;
@@ -21,6 +22,7 @@ const fileToGenerativePart = async (file: File) => {
 };
 
 const CropDiseaseDetector: React.FC<CropDiseaseDetectorProps> = ({ onDetect, result, loading, error }) => {
+    const { t } = useTranslation();
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [cropType, setCropType] = useState('');
@@ -31,7 +33,7 @@ const CropDiseaseDetector: React.FC<CropDiseaseDetectorProps> = ({ onDetect, res
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 4 * 1024 * 1024) { // 4MB limit
-                setComponentError("Image size should be less than 4MB.");
+                setComponentError(t('imageSizeError'));
                 return;
             }
             setImageFile(file);
@@ -47,7 +49,7 @@ const CropDiseaseDetector: React.FC<CropDiseaseDetectorProps> = ({ onDetect, res
                 const { inlineData } = await fileToGenerativePart(imageFile);
                 onDetect(inlineData.data, inlineData.mimeType, cropType);
             } catch (err) {
-                setComponentError("Failed to process image. Please try again.");
+                setComponentError(t('imageProcessError'));
             }
         }
     };
@@ -60,8 +62,8 @@ const CropDiseaseDetector: React.FC<CropDiseaseDetectorProps> = ({ onDetect, res
 
     return (
         <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50 h-full flex flex-col">
-            <h3 className="text-lg font-bold text-brand-dark flex items-center"><DiseaseIcon /> <span className="ml-2">Crop Disease Detector</span></h3>
-            <p className="text-sm text-gray-500 mt-1 mb-4">Upload an image to detect diseases. (+30 PTS)</p>
+            <h3 className="text-lg font-bold text-brand-dark flex items-center"><DiseaseIcon /> <span className="ml-2">{t('diseaseDetectorTitle')}</span></h3>
+            <p className="text-sm text-gray-500 mt-1 mb-4">{t('diseaseDetectorDescription')}</p>
             
             <form onSubmit={handleSubmit} className="space-y-3">
                 <input
@@ -78,12 +80,12 @@ const CropDiseaseDetector: React.FC<CropDiseaseDetectorProps> = ({ onDetect, res
                     disabled={loading}
                     className="w-full text-center py-3 px-4 border-2 border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:border-brand-green hover:bg-green-50 transition-colors"
                 >
-                    {imagePreview ? 'Change Image' : 'Upload or Take Photo'}
+                    {imagePreview ? t('changeImageButton') : t('uploadImageButton')}
                 </button>
 
                 {imagePreview && (
                     <div className="mt-2 flex justify-center">
-                        <img src={imagePreview} alt="Crop preview" className="max-h-40 rounded-md shadow-sm" />
+                        <img src={imagePreview} alt={t('cropPreviewAlt')} className="max-h-40 rounded-md shadow-sm" />
                     </div>
                 )}
                 
@@ -91,14 +93,14 @@ const CropDiseaseDetector: React.FC<CropDiseaseDetectorProps> = ({ onDetect, res
                     type="text"
                     value={cropType}
                     onChange={(e) => setCropType(e.target.value)}
-                    placeholder="Enter crop type (e.g., Tomato)"
+                    placeholder={t('cropTypePlaceholder')}
                     className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green sm:text-sm"
                     disabled={loading}
                     required
                 />
 
                 <button type="submit" className="w-full px-4 py-2 bg-indigo-500 text-white font-semibold rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400" disabled={loading || !imageFile || !cropType}>
-                    {loading ? 'Detecting...' : 'Detect Disease'}
+                    {loading ? t('detectingButton') : t('detectDiseaseButton')}
                 </button>
             </form>
 
@@ -110,12 +112,12 @@ const CropDiseaseDetector: React.FC<CropDiseaseDetectorProps> = ({ onDetect, res
                         <div className="flex justify-between items-center">
                             <p className="font-bold text-md text-indigo-800">{result.diseaseName}</p>
                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${confidenceStyles[result.confidence] || 'bg-gray-100 text-gray-800'}`}>
-                                {result.confidence} Confidence
+                                {result.confidence} {t('confidenceLabel')}
                             </span>
                         </div>
                         <p className="text-sm text-gray-700 mt-2">{result.description}</p>
                          <div className="mt-3">
-                            <p className="text-sm font-semibold text-gray-800">Treatment Suggestions:</p>
+                            <p className="text-sm font-semibold text-gray-800">{t('treatmentSuggestionsLabel')}:</p>
                             <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mt-1">
                                 {result.treatmentSuggestions.map((rec, i) => <li key={i}>{rec}</li>)}
                             </ul>

@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { Course } from '../types';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface CourseCardProps {
   course: Course;
@@ -9,6 +9,7 @@ interface CourseCardProps {
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course, onComplete, isCompleted }) => {
+  const { t } = useTranslation();
   return (
     <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${isCompleted ? 'border-gray-400 bg-gray-50' : 'border-brand-brown'} transition-all`}>
       <div className="flex items-start space-x-4">
@@ -22,7 +23,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onComplete, isCompleted
       </div>
       <div className="flex justify-between items-end mt-4">
         <div>
-          <p className={`text-lg font-bold ${isCompleted ? 'text-gray-400' : 'text-brand-brown'}`}>+{course.points} PTS</p>
+          <p className={`text-lg font-bold ${isCompleted ? 'text-gray-400' : 'text-brand-brown'}`}>+{course.points} {t('pointsLabel')}</p>
           <p className="text-xs text-gray-500">{course.certification}</p>
         </div>
         <button
@@ -34,7 +35,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onComplete, isCompleted
               : 'bg-brand-brown text-white hover:bg-brand-brown/80 focus:ring-brand-brown'
           }`}
         >
-          {isCompleted ? 'Certified!' : 'Complete Course'}
+          {isCompleted ? t('certifiedButton') : t('completeCourseButton')}
         </button>
       </div>
     </div>

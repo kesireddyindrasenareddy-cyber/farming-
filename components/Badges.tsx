@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { Badge } from '../types';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface BadgesProps {
     badges: Badge[];
@@ -9,7 +9,7 @@ interface BadgesProps {
 }
 
 const Badges: React.FC<BadgesProps> = ({ badges, completedQuestsCount, completedCoursesCount }) => {
-    
+    const { t } = useTranslation();
     // Simple logic to "unlock" badges based on quest count
     const getIsUnlocked = (badgeId: string) => {
         switch(badgeId) {
@@ -24,7 +24,7 @@ const Badges: React.FC<BadgesProps> = ({ badges, completedQuestsCount, completed
 
     return (
         <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-bold mb-4 text-brand-dark">Your Badges</h3>
+            <h3 className="text-xl font-bold mb-4 text-brand-dark">{t('badgesTitle')}</h3>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
                 {badges.map(badge => {
                     const isUnlocked = getIsUnlocked(badge.id);
@@ -36,7 +36,7 @@ const Badges: React.FC<BadgesProps> = ({ badges, completedQuestsCount, completed
                             <p className={`text-xs font-medium mt-2 ${isUnlocked ? 'text-brand-dark' : 'text-gray-500'}`}>{badge.name}</p>
                             <div className="absolute bottom-full mb-2 w-48 bg-gray-800 text-white text-xs rounded py-1 px-2 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                                 {badge.description}
-                                {!isUnlocked && <span className="block font-bold">LOCKED</span>}
+                                {!isUnlocked && <span className="block font-bold">{t('lockedStatus')}</span>}
                             </div>
                         </div>
                     );
