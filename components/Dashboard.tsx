@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserProfile, Quest, LeaderboardEntry, Badge, Course, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, DailyBriefing, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter, CropSellingCenter } from '../types';
-import { generateQuests, checkPesticide, analyzeSoil, suggestCrops, getWaterRequirement, getDailyBriefing, getCropProductionTime, getEstimatedYield, findLocalDealers, findLocalPesticideShops, getGrassListings, detectCropDisease, findColdStorageCenters, findCropSellingCenters } from '../services/geminiService';
+import { UserProfile, Quest, LeaderboardEntry, Badge, Course, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, DailyBriefing, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter } from '../types';
+import { generateQuests, checkPesticide, analyzeSoil, suggestCrops, getWaterRequirement, getDailyBriefing, getCropProductionTime, getEstimatedYield, findLocalDealers, findLocalPesticideShops, getGrassListings, detectCropDisease, findColdStorageCenters } from '../services/geminiService';
 import Header from './Header';
 import QuestCard from './QuestCard';
 import Leaderboard from './Leaderboard';
@@ -80,9 +80,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
   const [coldStorageCenters, setColdStorageCenters] = useState<ColdStorageCenter[] | null>(null);
   const [coldStorageLoading, setColdStorageLoading] = useState(false);
   const [coldStorageError, setColdStorageError] = useState<string | null>(null);
-  const [cropSellingCenters, setCropSellingCenters] = useState<CropSellingCenter[] | null>(null);
-  const [cropSellingLoading, setCropSellingLoading] = useState(false);
-  const [cropSellingError, setCropSellingError] = useState<string | null>(null);
 
 
   const fetchQuests = useCallback(async () => {
@@ -306,21 +303,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
     }
   };
 
-  const handleFindCropSellingCenters = async (location: string, crop: string) => {
-    setCropSellingLoading(true);
-    setCropSellingError(null);
-    setCropSellingCenters(null);
-    try {
-        const result = await findCropSellingCenters(location, crop);
-        setCropSellingCenters(result);
-        addPoints(10);
-    } catch (err: any) {
-        setCropSellingError(err.message);
-    } finally {
-        setCropSellingLoading(false);
-    }
-  };
-
   const activeQuests = quests.filter(q => !completedQuests.includes(q.id));
 
   return (
@@ -384,10 +366,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
                 coldStorageCenters={coldStorageCenters}
                 coldStorageLoading={coldStorageLoading}
                 coldStorageError={coldStorageError}
-                onFindCropSellingCenters={handleFindCropSellingCenters}
-                cropSellingCenters={cropSellingCenters}
-                cropSellingLoading={cropSellingLoading}
-                cropSellingError={cropSellingError}
             />
 
             <div>

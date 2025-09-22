@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserProfile, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter, CropSellingCenter } from '../types';
+import { UserProfile, SoilData, PesticideCheckResult, SoilAnalysisResult, CropSuggestion, WaterRequirement, CropProductionInfo, EstimatedYield, EquipmentDealer, PesticideShop, GrassListing, CropDiseaseResult, ColdStorageCenter } from '../types';
 import PesticideChecker from './PesticideChecker';
 import SoilAnalyzer from './SoilAnalyzer';
 import CropSuggester from './CropSuggester';
@@ -11,7 +11,6 @@ import PesticideShopFinder from './PesticideShopFinder';
 import GrassMarketplace from './GrassMarketplace';
 import CropDiseaseDetector from './CropDiseaseDetector';
 import ColdStorageFinder from './ColdStorageFinder';
-import CropSellingCenterFinder from './CropSellingCenterFinder';
 
 interface FarmToolsProps {
     userProfile: UserProfile;
@@ -59,10 +58,6 @@ interface FarmToolsProps {
     coldStorageCenters: ColdStorageCenter[] | null;
     coldStorageLoading: boolean;
     coldStorageError: string | null;
-    onFindCropSellingCenters: (location: string, crop: string) => void;
-    cropSellingCenters: CropSellingCenter[] | null;
-    cropSellingLoading: boolean;
-    cropSellingError: string | null;
 }
 
 const FarmTools: React.FC<FarmToolsProps> = (props) => {
@@ -140,14 +135,6 @@ const FarmTools: React.FC<FarmToolsProps> = (props) => {
                     loading={props.coldStorageLoading}
                     error={props.coldStorageError}
                     userLocation={props.userProfile.location}
-                />
-                <CropSellingCenterFinder
-                    onFind={props.onFindCropSellingCenters}
-                    centers={props.cropSellingCenters}
-                    loading={props.cropSellingLoading}
-                    error={props.cropSellingError}
-                    userLocation={props.userProfile.location}
-                    userCrop={props.userProfile.crop}
                 />
             </div>
         </div>

@@ -144,6 +144,7 @@ export interface ColdStorageCenter {
   capacity: string;
 }
 
+// Fix: Add missing CropSellingCenter interface
 export interface CropSellingCenter {
   name: string;
   address: string;
