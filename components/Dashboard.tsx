@@ -120,8 +120,14 @@ const Dashboard: React.FC<DashboardProps> = ({ userProfile: initialProfile }) =>
   }, [userProfile, completedQuests.length, language]);
 
   useEffect(() => {
-    fetchQuests();
-    fetchBriefing();
+    const loadInitialData = async () => {
+      // Call fetchQuests and wait for it to complete to avoid rate limiting.
+      await fetchQuests();
+      // Then call fetchBriefing after the first request is done.
+      await fetchBriefing();
+    };
+
+    loadInitialData();
   }, [fetchQuests, fetchBriefing]);
 
   const addPoints = (points: number) => {
